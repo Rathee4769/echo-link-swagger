@@ -1,0 +1,154 @@
+openapi: 3.0.0
+info:
+  title: Echo link API Documentation
+  description: API Documentation for project code named echo link.
+  version: 1.0.0
+paths:
+  /api/v1/login:
+    post:
+      summary: User login
+      description: Authenticates a user and returns a token for subsequent requests.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: The username or email of the user.
+                  example: johndoe@example.com
+                password:
+                  type: string
+                  description: The user's password.
+                  example: "password123"
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT or session token.
+                    example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  
+        '401':
+          description: Unauthorized - Invalid username or password.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+                    example: "Invalid username or password."
+
+  /api/v1/register:
+    post:
+      summary: User registration
+      description: Registers a new user in the system.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  description: First namme of the user.
+                  example: john
+                last_name:
+                  type: string
+                  description: Last name of the user.
+                  example: doe
+                email:
+                  type: string
+                  description: Email address of the user.
+                  example: johndoe@example.com
+                password:
+                  type: string
+                  description: Password for the user.
+                  example: "password123"
+              required:
+                - username
+                - email
+                - password
+      responses:
+        '201':
+          description: User registered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message.
+                    example: "User registered successfully."
+        '400':
+          description: Bad request - Invalid input or email already registered.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+                    example: "Email already registered."
+
+  /api/v1/forgot-password:
+    post:
+      summary: Forgot password
+      description: Sends a password reset link to the user's email address.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: Email address associated with the account.
+                  example: johndoe@example.com
+              required:
+                - email
+      responses:
+        '200':
+          description: Password reset email sent successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message.
+                    example: "Password reset email sent."
+        '404':
+          description: Not found - Email does not exist in the system.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+                    example: "Email not found."
