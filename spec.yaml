@@ -1,10 +1,10 @@
 openapi: 3.0.0
 info:
-  title: Echo link API Documentation
+  title: Echo Link API Documentation
   description: API Documentation for project code named echo link.
   version: 1.0.0
 paths:
-  /api/v1/login:
+  /auth/v1/login:
     post:
       summary: User login
       description: Authenticates a user and returns a token for subsequent requests.
@@ -53,7 +53,7 @@ paths:
                     description: Error message.
                     example: "Invalid username or password."
 
-  /api/v1/register:
+  /auth/v1/register:
     post:
       summary: User registration
       description: Registers a new user in the system.
@@ -110,7 +110,7 @@ paths:
                     description: Error message.
                     example: "Email already registered."
 
-  /api/v1/forgot-password:
+  /auth/v1/forgot-password:
     post:
       summary: Forgot password
       description: Sends a password reset link to the user's email address.
