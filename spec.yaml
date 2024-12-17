@@ -4,7 +4,7 @@ info:
   description: API Documentation for project code named echo link.
   version: 1.0.0
 paths:
-  /auth/v1/login:
+  /api/v1/login:
     post:
       summary: User login
       description: Authenticates a user and returns a token for subsequent requests.
@@ -53,7 +53,7 @@ paths:
                     description: Error message.
                     example: "Invalid username or password."
 
-  /auth/v1/register:
+  /api/v1/register:
     post:
       summary: User registration
       description: Registers a new user in the system.
@@ -110,7 +110,7 @@ paths:
                     description: Error message.
                     example: "Email already registered."
 
-  /auth/v1/forgot-password:
+  /api/v1/forgot-password:
     post:
       summary: Forgot password
       description: Sends a password reset link to the user's email address.
@@ -152,3 +152,308 @@ paths:
                     type: string
                     description: Error message.
                     example: "Email not found."
+  /api/v1/device:
+    post:
+      summary: Register a device
+      description: Registers a device to a specific user once it connects to the Wi-Fi network.
+      tags:
+        - Device Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deviceId:
+                  type: string
+                  description: The unique identifier of the device.
+                  example: "abc123xyz"
+                metadata:
+                  type: object
+                  description: Additional information about the device.
+                  example: 
+                    deviceName: "Room 1"
+                    model: "ST1000"
+                    firmwareVersion:  "1.0.0"
+              required:
+                - deviceId
+      responses:
+        '201':
+          description: Device registered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message.
+                    example: "Device registered successfully."
+        '400':
+          description: Bad request - Invalid input.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+                    example: "Device ID is missing."
+    get:
+      summary: Get device list
+      description: Fetches the list of devices registered for a specific user.
+      tags:
+        - Device Management
+      responses:
+        '200':
+          description: List of registered devices.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  devices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        deviceId:
+                          type: string
+                          description: The unique identifier of the device.
+                          example: "abc123xyz"
+                        metadata:
+                          type: object
+                          description: Additional details about the device.
+                          example:
+                            model: "ST1000"
+                            deviceName: "Room 1"
+                            firmwareVersion:  "1.0.0"
+                            
+        '404':
+          description: No devices found for the given user.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+                    example: "No devices found."
+  /message/socket:
+    get:
+      summary: Connect to WebSocket
+      description: >
+        Establish a WebSocket connection. Include the Authorization token in the header
+        and provide the deviceId as a query parameter. The response will include an MP3 file.
+      tags:
+        - Message 
+      parameters:
+        - name: deviceId
+          in: query
+          required: true
+          description: Unique identifier for the device.
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token for authentication. Use the format 'Bearer {token}'.
+          schema:
+            type: string
+      responses:
+        '101':
+          description: Switching Protocols - WebSocket connection established.
+        '400':
+          description: Bad Request - Missing or invalid parameters.
+        '401':
+          description: Unauthorized - Missing or invalid Authorization token.
+        '200':
+          description: MP3 file returned in response.
+          content:
+            audio/mpeg:
+              schema:
+                type: string
+                format: binary
+                description: MP3 audio file
+
+  /api/v1/device/{device_id}/message:
+    post:
+      summary: Create an audio message for a device
+      operationId: createAudioMessage
+      tags:
+        - Message
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          description: The unique identifier for the device.
+          schema:
+            type: string
+      requestBody:
+        description: The audio message to be created.
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                audioFile:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Audio message created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messageId:
+                    type: string
+                    description: The unique identifier for the created audio message.
+        '400':
+          description: Invalid input or missing audio file.
+        '404':
+          description: Device not found.
+
+  /api/v1/devices/{device_id}/messages:
+    get:
+      summary: (Optional)Get messages after a specific timestamp
+      operationId: getMessagesAfterTimestamp
+      tags:
+        - Message
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          description: The unique identifier for the device.
+          schema:
+            type: string
+        - name: timestamp
+          in: query
+          required: true
+          description: The timestamp from which to retrieve messages.
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Audio message and additional metadata after the specified timestamp.
+          content:
+            multipart/mixed:
+              schema:
+                type: object
+                properties:
+                  audioFile:
+                    type: string
+                    format: binary
+                    description: MP3 audio file as byte array.
+                  metadata:
+                    type: object
+                    properties:
+                      timestamp:
+                        type: string
+                        format: date-time
+                        description: The timestamp when the message was created.
+                      isNextAvailable:
+                        type: boolean
+                        description: Flag indicating if there are more messages available after the current one.
+        '400':
+          description: Invalid timestamp format.
+        '404':
+          description: Device not found.
+        '500':
+          description: Internal server error.
+
+  /api/v1/device/{device_id}:
+    delete:
+      summary: Remove a device
+      description: Removes a device from a user’s list. The device will act as a new device after removal.
+      tags:
+        - Device Management
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          description: The ID of the device.
+          schema:
+            type: string
+            example: "abc123xyz"
+      responses:
+        '200':
+          description: Device removed successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message.
+                    example: "Device removed successfully."
+        '404':
+          description: Device not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+                    example: "Device not found for the given user."
+    patch:
+      summary: Update device metadata
+      description: Updates metadata for a specific device.
+      tags:
+        - Device Management
+      parameters:
+        - name: device_id
+          in: path
+          required: true
+          description: The ID of the device.
+          schema:
+            type: string
+            example: "abc123xyz"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                metadata:
+                  type: object
+                  description: Metadata to update for the device.
+                  example:
+                    model: "ST1000"
+                    deviceName: "Room 2"
+                    firmwareVersion:  "1.1.0"
+              required:
+                - metadata
+      responses:
+        '200':
+          description: Device metadata updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message.
+                    example: "Device metadata updated successfully."
+        '404':
+          description: Device not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+                    example: "Device not found for the given user."
+    
