@@ -123,12 +123,12 @@ paths:
             schema:
               type: object
               properties:
-                email:
+                username:
                   type: string
                   description: Email address associated with the account.
                   example: johndoe@example.com
               required:
-                - email
+                - username
       responses:
         '200':
           description: Password reset email sent successfully.
@@ -152,6 +152,56 @@ paths:
                     type: string
                     description: Error message.
                     example: "Email not found."
+  /api/v1/reset-password:
+    post:
+      summary: Reset password
+      description: Sends a password reset link to the user's email address.
+      tags:
+        - Authentication
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Auth header
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  description: Email address associated with the account.
+                  example: johndoe@example.com
+              required:
+                - username
+      responses:
+        '200':
+          description: Password reset email sent successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message.
+                    example: "Password reset email sent."
+        '404':
+          description: Not found - Email does not exist in the system.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message.
+                    example: "Email not found."
+  
   /api/v1/device:
     post:
       summary: Register a device
